@@ -3,6 +3,7 @@
 // (found in the LICENSE-* files in the repository)
 
 use std::{
+    io::Write,
     mem::ManuallyDrop,
     ops::Deref,
     sync::{
@@ -272,6 +273,29 @@ impl ByteView {
     #[must_use]
     pub fn with_size(slice_len: usize) -> Self {
         Self::with_size_zeroed(slice_len)
+    }
+
+    /// Fuses some byte slices into a single byteview.
+    #[must_use]
+    pub fn fused(slices: &[&[u8]]) -> Self {
+        let len: usize = slices.iter().map(|x| x.len()).sum();
+        let mut builder = Self::with_size_unchecked(len);
+
+        // NOTE:
+        //
+        // 1) We know we are the owner because we just constructed the value
+        // 2) We calculated the size of A + B + ..., so writing A & B & ... should not surpass the buffer
+        #[allow(clippy::expect_used)]
+        {
+            let mut mutator = builder.get_mut().expect("we are the owner");
+            let mut mutator = &mut mutator[..];
+
+            for slice in slices {
+                mutator.write_all(slice).expect("should write");
+            }
+        }
+
+        builder
     }
 
     /// Creates a new zeroed, fixed-length byteview.
@@ -824,6 +848,30 @@ mod tests {
             32,
             std::mem::size_of::<ByteView>() + std::mem::size_of::<HeapAllocationHeader>()
         );
+    }
+
+    #[test]
+    fn fuse_empty() {
+        let bytes = ByteView::fused(&[]);
+        assert_eq!(&*bytes, []);
+    }
+
+    #[test]
+    fn fuse_one() {
+        let bytes = ByteView::fused(&[b"abc"]);
+        assert_eq!(&*bytes, b"abc");
+    }
+
+    #[test]
+    fn fuse_two() {
+        let bytes = ByteView::fused(&[b"abc", b"def"]);
+        assert_eq!(&*bytes, b"abcdef");
+    }
+
+    #[test]
+    fn fuse_four() {
+        let bytes = ByteView::fused(&[b"abc", b"def", b"xyz", b"123"]);
+        assert_eq!(&*bytes, b"abcdefxyz123");
     }
 
     #[test]
