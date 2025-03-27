@@ -275,10 +275,10 @@ impl ByteView {
         Self::with_size_zeroed(slice_len)
     }
 
-    /// Fuses some byte slices into a single byteview.
+    /// Fuses two byte slices into a single byteview.
     #[must_use]
-    pub fn fused(slices: &[&[u8]]) -> Self {
-        let len: usize = slices.iter().map(|x| x.len()).sum();
+    pub fn fused(left: &[u8], right: &[u8]) -> Self {
+        let len: usize = left.len() + right.len();
         let mut builder = Self::with_size_unchecked(len);
 
         // NOTE:
@@ -290,9 +290,8 @@ impl ByteView {
             let mut mutator = builder.get_mut().expect("we are the owner");
             let mut mutator = &mut mutator[..];
 
-            for slice in slices {
-                mutator.write_all(slice).expect("should write");
-            }
+            mutator.write_all(left).expect("should write");
+            mutator.write_all(right).expect("should write");
         }
 
         builder
@@ -593,7 +592,7 @@ impl ByteView {
                         len,
                         prefix: [0; PREFIX_SIZE],
                         heap: unsafe { self.trailer.long.heap },
-                        offset: begin as u32,
+                        offset: unsafe { self.trailer.long.offset } + begin as u32,
                         original_len: unsafe { self.trailer.long.original_len },
                     }),
                 },
@@ -851,27 +850,38 @@ mod tests {
     }
 
     #[test]
+    fn sliced_clone() {
+        let s = ByteView::from([
+            1, 255, 255, 255, 251, 255, 255, 255, 255, 255, 1, 21, 255, 255, 255, 255, 5, 255, 255,
+            255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 0, 0, 4, 3, 255,
+            255, 0, 0, 255, 0, 0, 0, 254, 2, 0, 0, 0, 5, 2, 42, 0, 0, 0, 1, 0, 0, 0, 44, 0, 0, 0,
+            2, 0, 0, 0,
+        ]);
+        let slice = s.slice(12..(12 + 21));
+
+        #[allow(clippy::redundant_clone)]
+        let cloned = slice.clone();
+
+        assert_eq!(slice.prefix(), cloned.prefix());
+        assert_eq!(slice, cloned);
+    }
+
+    #[test]
     fn fuse_empty() {
-        let bytes = ByteView::fused(&[]);
+        let bytes = ByteView::fused(&[], &[]);
         assert_eq!(&*bytes, []);
     }
 
     #[test]
     fn fuse_one() {
-        let bytes = ByteView::fused(&[b"abc"]);
+        let bytes = ByteView::fused(b"abc", &[]);
         assert_eq!(&*bytes, b"abc");
     }
 
     #[test]
     fn fuse_two() {
-        let bytes = ByteView::fused(&[b"abc", b"def"]);
+        let bytes = ByteView::fused(b"abc", b"def");
         assert_eq!(&*bytes, b"abcdef");
-    }
-
-    #[test]
-    fn fuse_four() {
-        let bytes = ByteView::fused(&[b"abc", b"def", b"xyz", b"123"]);
-        assert_eq!(&*bytes, b"abcdefxyz123");
     }
 
     #[test]
