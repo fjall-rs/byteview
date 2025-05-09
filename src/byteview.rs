@@ -135,7 +135,7 @@ impl std::cmp::PartialEq for ByteView {
         // both strings must have the same prefix and same length
         //
         // If we are inlined, the other string must be inlined too,
-        // so checking the prefix is enough
+        // so checking the short slice is enough
         if self.is_inline() {
             self.get_short_slice() == other.get_short_slice()
         } else {
@@ -263,18 +263,6 @@ impl ByteView {
         Ok(s)
     }
 
-    /// Creates a new zeroed, fixed-length byteview.
-    ///
-    /// Use [`ByteView::get_mut`] to mutate the content.
-    ///
-    /// # Panics
-    ///
-    /// Panics if the length does not fit in a u32 (4 GiB).
-    #[must_use]
-    pub fn with_size(slice_len: usize) -> Self {
-        Self::with_size_zeroed(slice_len)
-    }
-
     /// Fuses two byte slices into a single byteview.
     #[must_use]
     pub fn fused(left: &[u8], right: &[u8]) -> Self {
@@ -295,6 +283,18 @@ impl ByteView {
         }
 
         builder
+    }
+
+    /// Creates a new zeroed, fixed-length byteview.
+    ///
+    /// Use [`ByteView::get_mut`] to mutate the content.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the length does not fit in a u32 (4 GiB).
+    #[must_use]
+    pub fn with_size(slice_len: usize) -> Self {
+        Self::with_size_zeroed(slice_len)
     }
 
     /// Creates a new zeroed, fixed-length byteview.
@@ -357,12 +357,14 @@ impl ByteView {
         view
     }
 
-    /// Creates a new fixed-length byteview, with uninitialized contents.
+    /// Creates a new fixed-length byteview, **with uninitialized contents**.
     ///
     /// # Panics
     ///
     /// Panics if the length does not fit in a u32 (4 GiB).
-    fn with_size_unchecked(slice_len: usize) -> Self {
+    #[doc(hidden)]
+    #[must_use]
+    pub fn with_size_unzeroed(slice_len: usize) -> Self {
         let view = if slice_len <= INLINE_SIZE {
             Self {
                 trailer: Trailer {
@@ -652,7 +654,7 @@ impl ByteView {
 
         debug_assert!(
             len <= INLINE_SIZE,
-            "cannot get short slice - slice is not inlined"
+            "cannot get short slice - slice is not inlined",
         );
 
         // SAFETY: Shall only be called if slice is inlined
