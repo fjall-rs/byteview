@@ -252,10 +252,10 @@ impl ByteView {
     ///
     /// Returns an error if an I/O error occurred.
     pub fn from_reader<R: std::io::Read>(reader: &mut R, len: usize) -> std::io::Result<Self> {
-        // NOTE: We can use _unchecked to skip zeroing of the heap allocated slice
+        // NOTE: We can use _unzeroed to skip zeroing of the heap allocated slice
         // because we receive the `len` parameter
         // If the reader does not give us exactly `len` bytes, `read_exact` fails anyway
-        let mut s = Self::with_size_unchecked(len);
+        let mut s = Self::with_size_unzeroed(len);
         {
             let mut builder = Mutator(&mut s);
             reader.read_exact(&mut builder)?;
@@ -267,7 +267,7 @@ impl ByteView {
     #[must_use]
     pub fn fused(left: &[u8], right: &[u8]) -> Self {
         let len: usize = left.len() + right.len();
-        let mut builder = Self::with_size_unchecked(len);
+        let mut builder = Self::with_size_unzeroed(len);
 
         // NOTE:
         //
@@ -429,7 +429,7 @@ impl ByteView {
     pub fn new(slice: &[u8]) -> Self {
         let slice_len = slice.len();
 
-        let mut view = Self::with_size_unchecked(slice_len);
+        let mut view = Self::with_size_unzeroed(slice_len);
 
         if view.is_inline() {
             // SAFETY: We check for inlinability
