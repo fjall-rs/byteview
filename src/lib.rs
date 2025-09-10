@@ -47,10 +47,11 @@
     clippy::needless_lifetimes
 )]
 
+mod builder;
 mod byteview;
 mod strview;
 
 pub use {byteview::ByteView, strview::StrView};
 
 #[doc(hidden)]
-pub use byteview::Mutator;
+pub use byteview::{Builder, Mutator};

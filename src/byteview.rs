@@ -12,6 +12,8 @@ use std::{
     },
 };
 
+pub use crate::builder::Builder;
+
 #[cfg(target_pointer_width = "64")]
 const INLINE_SIZE: usize = 20;
 
@@ -207,6 +209,12 @@ impl Drop for Mutator<'_> {
 }
 
 impl ByteView {
+    #[doc(hidden)]
+    #[must_use]
+    pub fn builder_unzeroed(len: usize) -> Builder {
+        Builder::new(Self::with_size_unzeroed(len))
+    }
+
     fn prefix(&self) -> &[u8] {
         let len = PREFIX_SIZE.min(self.len());
 
@@ -218,7 +226,7 @@ impl ByteView {
         self.len() <= INLINE_SIZE
     }
 
-    fn update_prefix(&mut self) {
+    pub(crate) fn update_prefix(&mut self) {
         if !self.is_inline() {
             unsafe {
                 let slice_ptr: &[u8] = &*self;
@@ -639,7 +647,7 @@ impl ByteView {
         unsafe { self.trailer.short.len as usize }
     }
 
-    fn get_mut_slice(&mut self) -> &mut [u8] {
+    pub(crate) fn get_mut_slice(&mut self) -> &mut [u8] {
         let len = self.len();
 
         if self.is_inline() {
