@@ -740,14 +740,13 @@ mod serde {
     use serde::de::{self, Visitor};
     use serde::{Deserialize, Deserializer, Serialize, Serializer};
     use std::fmt;
-    use std::ops::Deref;
 
     impl Serialize for ByteView {
         fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
         where
             S: Serializer,
         {
-            serializer.serialize_bytes(self.deref())
+            serializer.serialize_bytes(self)
         }
     }
 
@@ -770,6 +769,16 @@ mod serde {
                     E: de::Error,
                 {
                     Ok(ByteView::new(v))
+                }
+
+                fn visit_seq<A>(self, seq: A) -> Result<Self::Value, A::Error>
+                where
+                    A: de::SeqAccess<'de>,
+                {
+                    let bytes: Vec<u8> =
+                        Deserialize::deserialize(de::value::SeqAccessDeserializer::new(seq))?;
+
+                    Ok(ByteView::new(&bytes))
                 }
             }
 
