@@ -3,7 +3,6 @@
 // (found in the LICENSE-* files in the repository)
 
 use std::{
-    io::Write,
     mem::ManuallyDrop,
     ops::Deref,
     sync::{
@@ -275,22 +274,12 @@ impl ByteView {
     #[must_use]
     pub fn fused(left: &[u8], right: &[u8]) -> Self {
         let len: usize = left.len() + right.len();
-        let mut builder = Self::with_size_unzeroed(len);
+        let mut builder = Self::builder_unzeroed(len);
 
-        // NOTE:
-        //
-        // 1) We know we are the owner because we just constructed the value
-        // 2) We calculated the size of A + B + ..., so writing A & B & ... should not surpass the buffer
-        #[allow(clippy::expect_used)]
-        {
-            let mut mutator = builder.get_mut().expect("we are the owner");
-            let mut mutator = &mut mutator[..];
+        builder[0..left.len()].copy_from_slice(left);
+        builder[left.len()..].copy_from_slice(right);
 
-            mutator.write_all(left).expect("should write");
-            mutator.write_all(right).expect("should write");
-        }
-
-        builder
+        builder.freeze()
     }
 
     /// Creates a new zeroed, fixed-length byteview.
