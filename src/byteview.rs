@@ -268,7 +268,7 @@ impl ByteView {
         // NOTE: We can use _unzeroed to skip zeroing of the heap allocated slice
         // because we receive the `len` parameter
         // If the reader does not give us exactly `len` bytes, `read_exact` fails anyway
-        let mut s = Self::with_size_unzeroed(len);
+        let mut s = unsafe { Self::with_size_unzeroed(len) };
         {
             let mut builder = Mutator(&mut s);
             reader.read_exact(&mut builder)?;
@@ -365,7 +365,7 @@ impl ByteView {
     /// Panics if the length does not fit in a u32 (4 GiB).
     #[doc(hidden)]
     #[must_use]
-    pub fn with_size_unzeroed(slice_len: usize) -> Self {
+    pub unsafe fn with_size_unzeroed(slice_len: usize) -> Self {
         let view = if slice_len <= INLINE_SIZE {
             Self {
                 trailer: Trailer {
@@ -430,7 +430,7 @@ impl ByteView {
     pub fn new(slice: &[u8]) -> Self {
         let slice_len = slice.len();
 
-        let mut view = Self::with_size_unzeroed(slice_len);
+        let mut view = unsafe { Self::with_size_unzeroed(slice_len) };
 
         if view.is_inline() {
             // SAFETY: We check for inlinability
