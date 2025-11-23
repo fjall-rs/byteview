@@ -210,8 +210,14 @@ impl Drop for Mutator<'_> {
 impl ByteView {
     #[doc(hidden)]
     #[must_use]
-    pub fn builder_unzeroed(len: usize) -> Builder {
+    pub unsafe fn builder_unzeroed(len: usize) -> Builder {
         Builder::new(Self::with_size_unzeroed(len))
+    }
+
+    #[doc(hidden)]
+    #[must_use]
+    pub fn builder(len: usize) -> Builder {
+        Builder::new(Self::with_size(len))
     }
 
     fn prefix(&self) -> &[u8] {
@@ -273,12 +279,10 @@ impl ByteView {
     /// Fuses two byte slices into a single byteview.
     #[must_use]
     pub fn fused(left: &[u8], right: &[u8]) -> Self {
-        let len: usize = left.len() + right.len();
-        let mut builder = Self::builder_unzeroed(len);
-
+        let len = left.len() + right.len();
+        let mut builder = unsafe { Self::builder_unzeroed(len) };
         builder[0..left.len()].copy_from_slice(left);
         builder[left.len()..].copy_from_slice(right);
-
         builder.freeze()
     }
 

@@ -17,6 +17,16 @@ Values with a known length can be constructed 2-2.5x faster than using `Arc<[u8]
 
 ![Constructor benchmark](ctor_bench.png)
 
+## Sponsors
+
+<a href="https://sqlsync.dev">
+  <picture>
+    <source width="240" alt="Orbitinghail" media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/fjall-rs/fjall-rs.github.io/d22fcb1e6966ce08327ea3bf6cf2ea86a840b071/public/logos/orbitinghail.svg" />
+    <source width="240" alt="Orbitinghail" media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/fjall-rs/fjall-rs.github.io/d22fcb1e6966ce08327ea3bf6cf2ea86a840b071/public/logos/orbitinghail_dark.svg" />
+    <img width="240" alt="Orbitinghail" src="https://raw.githubusercontent.com/fjall-rs/fjall-rs.github.io/d22fcb1e6966ce08327ea3bf6cf2ea86a840b071/public/logos/orbitinghail_dark.svg" />
+  </picture>
+</a>
+
 ## Memory usage
 
 Allocating 200M "" (len=0) strings:
