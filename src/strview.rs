@@ -180,7 +180,7 @@ mod serde {
                 }
             }
 
-            deserializer.deserialize_bytes(StrViewVisitor)
+            deserializer.deserialize_str(StrViewVisitor)
         }
     }
 }
@@ -189,6 +189,14 @@ mod serde {
 mod tests {
     use super::StrView;
     use std::collections::HashMap;
+
+    #[cfg(feature = "serde")]
+    #[test]
+    fn serde_roundtrip() {
+        let a = StrView::from("abcdef");
+        let b: StrView = serde_json::from_slice(&serde_json::to_vec(&a).unwrap()).unwrap();
+        assert_eq!(a, b);
+    }
 
     #[test]
     fn strview_hash() {
