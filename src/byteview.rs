@@ -880,7 +880,7 @@ mod tests {
     #[test]
     fn fuse_empty() {
         let bytes = ByteView::fused(&[], &[]);
-        assert_eq!(&*bytes, []);
+        assert_eq!(&*bytes, &[] as &[u8]);
     }
 
     #[test]
@@ -898,7 +898,7 @@ mod tests {
     #[test]
     fn empty_slice() {
         let bytes = ByteView::with_size_zeroed(0);
-        assert_eq!(&*bytes, []);
+        assert_eq!(&*bytes, &[] as &[u8]);
     }
 
     #[test]
