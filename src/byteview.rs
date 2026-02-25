@@ -796,7 +796,7 @@ mod tests {
     use super::{ByteView, HeapAllocationHeader};
     use std::io::Cursor;
 
-    /*#[test]
+    #[test]
     #[cfg(not(miri))]
     fn test_rykv() {
         use rkyv::{rancor::Error, Archive, Deserialize, Serialize};
@@ -837,7 +837,7 @@ mod tests {
             assert_eq!(archived.id, a.id);
             assert_eq!(archived.name, a.name);
         }
-    }*/
+    }
 
     #[test]
     #[cfg(target_pointer_width = "64")]
