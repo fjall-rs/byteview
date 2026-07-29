@@ -738,6 +738,12 @@ impl<const N: usize> From<[u8; N]> for ByteView {
     }
 }
 
+impl<const N: usize> From<&[u8; N]> for ByteView {
+    fn from(value: &[u8; N]) -> Self {
+        Self::from(value.as_slice())
+    }
+}
+
 #[cfg(feature = "serde")]
 mod serde {
     use super::ByteView;
@@ -875,6 +881,12 @@ mod tests {
 
         assert_eq!(slice.prefix(), cloned.prefix());
         assert_eq!(slice, cloned);
+    }
+
+    #[test]
+    fn sized_slice_ref() {
+        let b = b"hello";
+        let _bytes = ByteView::from(b);
     }
 
     #[test]
